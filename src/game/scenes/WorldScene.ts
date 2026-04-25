@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import { MISSIONS } from "../missions";
 import mascotUrl from "@/assets/mascot.png";
 import zoneForest from "@/assets/zone-forest.jpg";
