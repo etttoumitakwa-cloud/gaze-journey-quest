@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { PhaserWorld } from "./PhaserWorld";
 import { Calibration } from "./Calibration";
 import { GazeOverlay } from "./GazeOverlay";
+import { ShadowFogOverlay } from "./ShadowFogOverlay";
+import { StoryIntro } from "./StoryIntro";
 import { CrystalClearMission } from "./missions/CrystalClearMission";
 import { RiverRunMission } from "./missions/RiverRunMission";
 import { EchoTrailMission } from "./missions/EchoTrailMission";
@@ -15,11 +17,23 @@ import { MISSIONS } from "./missions";
 import { Button } from "@/components/ui/button";
 import { gaze } from "./gaze";
 
+const STORY_KEY = "gazeworld:storyseen";
+
+/** Map mission progress (0..6) to a kingdom name. */
+function kingdomFor(progressX: number): string {
+  if (progressX < 0.34) return "Bubble Meadow";
+  if (progressX < 0.67) return "Crystal Forest";
+  return "Star Citadel";
+}
+
 export function GameContainer() {
   const [needsCalibration, setNeedsCalibration] = useState(true);
+  const [showStory, setShowStory] = useState(
+    () => typeof window !== "undefined" && !localStorage.getItem(STORY_KEY),
+  );
   const [activeMission, setActiveMission] = useState<MissionId | null>(null);
   const [completed, setCompleted] = useState<MissionId[]>([]);
-  const [zone, setZone] = useState("Quiet Glade");
+  const [zone, setZone] = useState("Bubble Meadow");
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -30,6 +44,7 @@ export function GameContainer() {
       gaze.stop();
     };
   }, []);
+
 
   const handleMissionEnter = (id: MissionId) => {
     if (completed.includes(id)) return;
@@ -68,14 +83,20 @@ export function GameContainer() {
   }
 
   const allDone = completed.length >= MISSIONS.length;
+  // Fog density eases as the child completes missions (lifts the fog)
+  const fogDensity = Math.max(0.18, 0.55 - completed.length * 0.06);
+  const showOverlays = !activeMission && !showStory;
 
   return (
     <div className="min-h-screen bg-soft-gradient p-4 md:p-6">
       <header className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-4">
         <div>
-          <h1 className="font-pixel text-base md:text-lg text-foreground">🌸 ASD Explorer</h1>
+          <h1 className="font-pixel text-base md:text-lg text-foreground">🌫️ GazeWorld</h1>
           <p className="text-xs text-muted-foreground">
-            Now in: <span className="font-medium text-foreground">{zone}</span>
+            Kingdom: <span className="font-medium text-foreground">{kingdomFor(progress)}</span>
+            {zone && zone !== kingdomFor(progress) && (
+              <> · <span className="text-foreground">{zone}</span></>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -118,9 +139,9 @@ export function GameContainer() {
         {allDone && (
           <div className="mt-6 rounded-2xl bg-card p-6 text-center shadow-glow">
             <div className="text-4xl">🌟</div>
-            <h2 className="mt-2 font-pixel text-lg">All missions complete!</h2>
+            <h2 className="mt-2 font-pixel text-lg">The fog has lifted!</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              View your gaze patterns on the dashboard.
+              GazeWorld is bright again. View your gaze patterns on the dashboard.
             </p>
             <Link to="/dashboard">
               <Button className="mt-4">Open dashboard</Button>
@@ -129,8 +150,18 @@ export function GameContainer() {
         )}
       </main>
 
-      <GazeOverlay active={!activeMission} />
+      <ShadowFogOverlay active={showOverlays} density={fogDensity} />
+      <GazeOverlay active={showOverlays} />
       {renderMission()}
+      {showStory && (
+        <StoryIntro
+          onBegin={() => {
+            localStorage.setItem(STORY_KEY, "1");
+            setShowStory(false);
+          }}
+        />
+      )}
     </div>
   );
 }
+

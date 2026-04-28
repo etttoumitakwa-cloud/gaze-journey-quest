@@ -26,7 +26,7 @@ export function PhaserWorld({ completed, onMissionEnter, onPositionChange }: Pro
       parent: containerRef.current,
       width: containerRef.current.clientWidth,
       height: 640,
-      backgroundColor: "#f5e8f5",
+      backgroundColor: "#e8eef2",
       physics: { default: "arcade", arcade: { gravity: { x: 0, y: 0 } } },
       scale: {
         mode: Phaser.Scale.RESIZE,

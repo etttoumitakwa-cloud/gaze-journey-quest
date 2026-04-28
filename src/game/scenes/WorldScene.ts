@@ -88,10 +88,11 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create() {
-    // ---- Sky gradient (single solid pastel) covers whole world: no seams ever
-    this.cameras.main.setBackgroundColor("#f7d9ec");
+    // ---- Sky: very soft, low-chroma gradient (ASD-friendly: low arousal)
+    this.cameras.main.setBackgroundColor("#e8eef2");
     const sky = this.add.graphics();
-    sky.fillGradientStyle(0xfbe3f0, 0xfbe3f0, 0xe9d4f5, 0xe9d4f5, 1);
+    // pale sky → pale sage horizon, no saturated pinks
+    sky.fillGradientStyle(0xe8eef2, 0xe8eef2, 0xdfe8e2, 0xdfe8e2, 1);
     sky.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
     // ---- Continuous tiled hills/grass via TileSprite (perfectly seamless because it wraps a single texture)
@@ -102,13 +103,14 @@ export class WorldScene extends Phaser.Scene {
     const srcImg = bgTex.getSourceImage() as HTMLImageElement;
     const scaleY = WORLD_HEIGHT / srcImg.height;
     tile.setTileScale(scaleY, scaleY);
+    tile.setAlpha(0.85); // soften saturation
 
-    // ---- Ground band to hide any horizon mismatch and unify the floor color
+    // ---- Ground band: soft sage to unify the floor color
     const ground = this.add.graphics();
-    ground.fillStyle(0x9bd17a, 1);
+    ground.fillStyle(0xb6c9b0, 1);
     ground.fillRect(0, GROUND_Y + 10, WORLD_WIDTH, WORLD_HEIGHT - GROUND_Y);
     const groundShade = this.add.graphics();
-    groundShade.fillStyle(0x000000, 0.06);
+    groundShade.fillStyle(0x000000, 0.04);
     groundShade.fillRect(0, GROUND_Y + 10, WORLD_WIDTH, 6);
 
     // ---- Gentle ambient props sprinkled the whole way (deterministic)
@@ -176,8 +178,8 @@ export class WorldScene extends Phaser.Scene {
       }
 
       const container = this.add.container(x, GROUND_Y - 80);
-      const halo = this.add.circle(0, 0, 60, isDone ? 0xa0e0c0 : 0xffd1e8, 0.4);
-      const ring = this.add.circle(0, 0, 60, 0xffffff, 0).setStrokeStyle(3, isDone ? 0x6fc9a0 : 0xff9ec7);
+      const halo = this.add.circle(0, 0, 60, isDone ? 0xb6cfc4 : 0xc9d6e2, 0.35);
+      const ring = this.add.circle(0, 0, 60, 0xffffff, 0).setStrokeStyle(3, isDone ? 0x8fb6a4 : 0x9fb3c6);
       const text = this.add.text(0, 0, mission.emoji, { fontSize: "48px" }).setOrigin(0.5);
       const label = this.add
         .text(0, 80, mission.title, {
@@ -191,7 +193,7 @@ export class WorldScene extends Phaser.Scene {
       container.add([halo, ring, text, label]);
       if (isDone) {
         const check = this.add
-          .text(38, -40, "✓", { fontSize: "24px", color: "#6fc9a0", fontStyle: "bold" })
+          .text(38, -40, "✓", { fontSize: "24px", color: "#5a8a76", fontStyle: "bold" })
           .setOrigin(0.5);
         container.add(check);
       }
@@ -315,7 +317,7 @@ export class WorldScene extends Phaser.Scene {
       ease: "Back.easeOut",
     });
     for (let i = 0; i < 12; i++) {
-      const s = this.add.circle(t.x, GROUND_Y - 80, 4, 0xfff1a8, 0.9);
+      const s = this.add.circle(t.x, GROUND_Y - 80, 4, 0xeae3c8, 0.9);
       const angle = (i / 12) * Math.PI * 2;
       this.tweens.add({
         targets: s,
