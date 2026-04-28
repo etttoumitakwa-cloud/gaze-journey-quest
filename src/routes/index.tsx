@@ -7,14 +7,14 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
   head: () => ({
     meta: [
-      { title: "ASD Explorer — A cozy gaze-tracking journey" },
+      { title: "GazeWorld — Lift the Shadow Fog with your eyes" },
       {
         name: "description",
         content:
-          "A cozy pixel-art exploration game with eye-tracking missions. Walk a soft pastel world, meet friends, and play six mindful gaze games.",
+          "A calm pixel-art adventure for kids. Use your gaze as a superpower to lift the Shadow Fog across three enchanted kingdoms.",
       },
-      { property: "og:title", content: "ASD Explorer" },
-      { property: "og:description", content: "Cozy pixel-art world with eye-tracking missions." },
+      { property: "og:title", content: "GazeWorld" },
+      { property: "og:description", content: "Lift the Shadow Fog with your eyes." },
       { property: "og:image", content: zoneForest },
       { name: "twitter:image", content: zoneForest },
     ],
@@ -27,21 +27,21 @@ function LandingPage() {
       <section className="mx-auto flex max-w-5xl flex-col items-center px-6 pt-16 pb-10 text-center">
         <img
           src={mascot}
-          alt="Mochi the cozy mascot"
+          alt="The child explorer of GazeWorld"
           width={180}
           height={180}
           className="animate-float pixel-perfect drop-shadow-xl"
         />
         <h1 className="mt-6 font-pixel text-2xl md:text-4xl text-glow text-foreground">
-          ASD Explorer
+          GazeWorld
         </h1>
         <p className="mt-4 max-w-xl text-base md:text-lg text-muted-foreground">
-          Wander a cozy pastel world with your fluffy friend. Six gentle gaze
-          missions wait along the path — calm, playful, and a little curious.
+          The Shadow Fog has covered the land, hiding all the faces and friends.
+          Only a child with magic eyes can lift it — wherever you look, the world wakes up.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link to="/play">
-            <Button size="lg" className="font-pixel text-xs md:text-sm">▶ Begin journey</Button>
+            <Button size="lg" className="font-pixel text-xs md:text-sm">▶ Lift the fog</Button>
           </Link>
           <Link to="/dashboard">
             <Button size="lg" variant="outline" className="font-pixel text-xs md:text-sm">
