@@ -37,12 +37,8 @@ export function ShadowFogOverlay({ active, density = 0.55 }: Props) {
     const draw = () => {
       const { width: w, height: h } = canvas;
 
-      // 1) gentle fade so previously-cleared areas slowly re-fog
-      ctx.globalCompositeOperation = "source-over";
-      ctx.fillStyle = `rgba(210, 220, 230, ${0.012 * (density / 0.55)})`;
-      ctx.fillRect(0, 0, w, h);
-
-      // 2) clear a soft circle around the current gaze point
+      // Cleared areas stay cleared — no re-fogging.
+      // Just punch a soft hole around the current gaze point.
       const p = lastPoint.current;
       if (p) {
         const radius = 170;
