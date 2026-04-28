@@ -105,12 +105,12 @@ export class WorldScene extends Phaser.Scene {
     tile.setTileScale(scaleY, scaleY);
     tile.setAlpha(0.85); // soften saturation
 
-    // ---- Ground band to hide any horizon mismatch and unify the floor color
+    // ---- Ground band: soft sage to unify the floor color
     const ground = this.add.graphics();
-    ground.fillStyle(0x9bd17a, 1);
+    ground.fillStyle(0xb6c9b0, 1);
     ground.fillRect(0, GROUND_Y + 10, WORLD_WIDTH, WORLD_HEIGHT - GROUND_Y);
     const groundShade = this.add.graphics();
-    groundShade.fillStyle(0x000000, 0.06);
+    groundShade.fillStyle(0x000000, 0.04);
     groundShade.fillRect(0, GROUND_Y + 10, WORLD_WIDTH, 6);
 
     // ---- Gentle ambient props sprinkled the whole way (deterministic)
