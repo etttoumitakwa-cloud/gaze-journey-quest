@@ -7,6 +7,7 @@ const GameContainer = lazy(() =>
 
 export const Route = createFileRoute("/play")({
   component: PlayPage,
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Play — ASD Explorer" },
