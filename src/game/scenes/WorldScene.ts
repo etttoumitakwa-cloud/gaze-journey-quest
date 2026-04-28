@@ -178,8 +178,8 @@ export class WorldScene extends Phaser.Scene {
       }
 
       const container = this.add.container(x, GROUND_Y - 80);
-      const halo = this.add.circle(0, 0, 60, isDone ? 0xa0e0c0 : 0xffd1e8, 0.4);
-      const ring = this.add.circle(0, 0, 60, 0xffffff, 0).setStrokeStyle(3, isDone ? 0x6fc9a0 : 0xff9ec7);
+      const halo = this.add.circle(0, 0, 60, isDone ? 0xb6cfc4 : 0xc9d6e2, 0.35);
+      const ring = this.add.circle(0, 0, 60, 0xffffff, 0).setStrokeStyle(3, isDone ? 0x8fb6a4 : 0x9fb3c6);
       const text = this.add.text(0, 0, mission.emoji, { fontSize: "48px" }).setOrigin(0.5);
       const label = this.add
         .text(0, 80, mission.title, {
