@@ -1,7 +1,7 @@
 import * as Phaser from "phaser";
 import { MISSIONS } from "../missions";
 import mascotUrl from "@/assets/mascot.png";
-import worldBg from "@/assets/world-meadow.jpg";
+import worldBg from "@/assets/world-meadow-tile.jpg";
 import propFlower from "@/assets/prop-flower.png";
 import propTree from "@/assets/prop-tree.png";
 import propBall from "@/assets/prop-ball.png";
@@ -11,6 +11,12 @@ import propRock from "@/assets/prop-rock.png";
 import propButterfly from "@/assets/prop-butterfly.png";
 import propBench from "@/assets/prop-bench.png";
 import propKite from "@/assets/prop-kite.png";
+import themeCrystal from "@/assets/theme-crystal.png";
+import themeRiver from "@/assets/theme-river.png";
+import themeBalloon from "@/assets/theme-balloon.png";
+import themeAnimal from "@/assets/theme-animal.png";
+import themeStar from "@/assets/theme-star.png";
+import themePuzzle from "@/assets/theme-puzzle.png";
 
 export interface WorldSceneEvents {
   onMissionEnter: (id: string) => void;
@@ -23,7 +29,16 @@ const WORLD_WIDTH = SEGMENT_WIDTH * TOTAL_SEGMENTS;
 const WORLD_HEIGHT = 640;
 const GROUND_Y = WORLD_HEIGHT - 140;
 
-// Deterministic pseudo-random so the world feels stable, never re-shuffles
+// Per-mission themed prop key
+const MISSION_THEME: Record<string, { key: string; scale: number; yOffset: number; float?: boolean }> = {
+  crystal: { key: "t-crystal", scale: 0.22, yOffset: -10 },
+  river:   { key: "t-river",   scale: 0.30, yOffset: 10 },
+  echo:    { key: "t-balloon", scale: 0.22, yOffset: -220, float: true },
+  owl:     { key: "t-animal",  scale: 0.20, yOffset: -10 },
+  social:  { key: "t-star",    scale: 0.16, yOffset: -260, float: true },
+  maze:    { key: "t-puzzle",  scale: 0.18, yOffset: -10 },
+};
+
 function seeded(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -31,38 +46,6 @@ function seeded(seed: number) {
     return s / 0xffffffff;
   };
 }
-
-const PROP_KEYS = [
-  "p-flower",
-  "p-tree",
-  "p-ball",
-  "p-house",
-  "p-mushroom",
-  "p-rock",
-  "p-butterfly",
-  "p-bench",
-  "p-kite",
-] as const;
-
-interface PropDef {
-  key: (typeof PROP_KEYS)[number];
-  scale: number;
-  yOffset: number; // relative to ground
-  sway?: boolean;
-  float?: boolean;
-}
-
-const PROP_DEFS: Record<(typeof PROP_KEYS)[number], PropDef> = {
-  "p-flower":    { key: "p-flower",    scale: 0.12, yOffset: 0,    sway: true },
-  "p-tree":      { key: "p-tree",      scale: 0.42, yOffset: -90 },
-  "p-ball":      { key: "p-ball",      scale: 0.14, yOffset: -10 },
-  "p-house":     { key: "p-house",     scale: 0.42, yOffset: -90 },
-  "p-mushroom":  { key: "p-mushroom",  scale: 0.16, yOffset: -10 },
-  "p-rock":      { key: "p-rock",      scale: 0.16, yOffset: -10 },
-  "p-butterfly": { key: "p-butterfly", scale: 0.10, yOffset: -180, float: true },
-  "p-bench":     { key: "p-bench",     scale: 0.22, yOffset: -20 },
-  "p-kite":      { key: "p-kite",      scale: 0.18, yOffset: -260, float: true },
-};
 
 export class WorldScene extends Phaser.Scene {
   private mascot!: Phaser.GameObjects.Image;
@@ -96,70 +79,101 @@ export class WorldScene extends Phaser.Scene {
     this.load.image("p-butterfly", propButterfly);
     this.load.image("p-bench", propBench);
     this.load.image("p-kite", propKite);
+    this.load.image("t-crystal", themeCrystal);
+    this.load.image("t-river", themeRiver);
+    this.load.image("t-balloon", themeBalloon);
+    this.load.image("t-animal", themeAnimal);
+    this.load.image("t-star", themeStar);
+    this.load.image("t-puzzle", themePuzzle);
   }
 
   create() {
-    this.cameras.main.setBackgroundColor("#f5e8f5");
+    // ---- Sky gradient (single solid pastel) covers whole world: no seams ever
+    this.cameras.main.setBackgroundColor("#f7d9ec");
+    const sky = this.add.graphics();
+    sky.fillGradientStyle(0xfbe3f0, 0xfbe3f0, 0xe9d4f5, 0xe9d4f5, 1);
+    sky.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
-    // ---- Single continuous environment: tile the same background across the world
-    for (let i = 0; i < TOTAL_SEGMENTS; i++) {
-      const bg = this.add.image(i * SEGMENT_WIDTH, 0, "world-bg").setOrigin(0, 0);
-      bg.setDisplaySize(SEGMENT_WIDTH, WORLD_HEIGHT);
-    }
+    // ---- Continuous tiled hills/grass via TileSprite (perfectly seamless because it wraps a single texture)
+    const bgTex = this.textures.get("world-bg");
+    bgTex.setFilter(Phaser.Textures.FilterMode.NEAREST);
+    const tile = this.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, "world-bg").setOrigin(0, 0);
+    // scale the texture so it fills vertically while still tiling horizontally
+    const srcImg = bgTex.getSourceImage() as HTMLImageElement;
+    const scaleY = WORLD_HEIGHT / srcImg.height;
+    tile.setTileScale(scaleY, scaleY);
 
-    // ---- Sprinkle props deterministically. Density grows slightly with distance,
-    // so the environment doesn't *change*, it just gets richer as the player explores.
+    // ---- Ground band to hide any horizon mismatch and unify the floor color
+    const ground = this.add.graphics();
+    ground.fillStyle(0x9bd17a, 1);
+    ground.fillRect(0, GROUND_Y + 10, WORLD_WIDTH, WORLD_HEIGHT - GROUND_Y);
+    const groundShade = this.add.graphics();
+    groundShade.fillStyle(0x000000, 0.06);
+    groundShade.fillRect(0, GROUND_Y + 10, WORLD_WIDTH, 6);
+
+    // ---- Gentle ambient props sprinkled the whole way (deterministic)
     const rand = seeded(20260428);
-    const propCount = 140;
-    for (let i = 0; i < propCount; i++) {
-      const t = i / propCount; // 0..1 along the world
-      // Avoid spawning right on top of the start spot
-      const x = 280 + rand() * (WORLD_WIDTH - 560);
-
-      // Weight: early world has more flowers/mushrooms, later world adds variety
-      const variety = 0.35 + t * 0.65;
-      const idx = Math.floor(rand() * PROP_KEYS.length * variety) % PROP_KEYS.length;
-      const def = PROP_DEFS[PROP_KEYS[idx]];
-
-      const jitter = (rand() - 0.5) * 14;
-      const y = GROUND_Y + def.yOffset + jitter;
-      const sprite = this.add.image(x, y, def.key);
-      const sScale = def.scale * (0.85 + rand() * 0.35);
-      sprite.setScale(sScale);
-
-      // Keep pixel-art crispness
-      sprite.setOrigin(0.5, 1);
-      (sprite.texture as Phaser.Textures.Texture).setFilter(Phaser.Textures.FilterMode.NEAREST);
-
+    const ambient = [
+      { key: "p-flower", scale: 0.12, yOffset: 0,    sway: true },
+      { key: "p-mushroom", scale: 0.16, yOffset: -10 },
+      { key: "p-rock", scale: 0.16, yOffset: -10 },
+      { key: "p-tree", scale: 0.42, yOffset: -90 },
+      { key: "p-bench", scale: 0.22, yOffset: -20 },
+      { key: "p-butterfly", scale: 0.10, yOffset: -180, float: true },
+    ];
+    const ambientCount = 110;
+    for (let i = 0; i < ambientCount; i++) {
+      const def = ambient[Math.floor(rand() * ambient.length)];
+      const x = 240 + rand() * (WORLD_WIDTH - 480);
+      const y = GROUND_Y + def.yOffset + (rand() - 0.5) * 12;
+      const s = this.add.image(x, y, def.key).setOrigin(0.5, 1);
+      s.setScale(def.scale * (0.85 + rand() * 0.35));
+      (s.texture as Phaser.Textures.Texture).setFilter(Phaser.Textures.FilterMode.NEAREST);
       if (def.sway) {
-        this.tweens.add({
-          targets: sprite,
-          angle: rand() > 0.5 ? 4 : -4,
-          yoyo: true,
-          repeat: -1,
-          duration: 1800 + rand() * 1200,
-          ease: "Sine.easeInOut",
-        });
+        this.tweens.add({ targets: s, angle: rand() > 0.5 ? 4 : -4, yoyo: true, repeat: -1, duration: 1800 + rand() * 1200, ease: "Sine.easeInOut" });
       }
       if (def.float) {
-        this.tweens.add({
-          targets: sprite,
-          x: sprite.x + (rand() > 0.5 ? 40 : -40),
-          y: sprite.y - 20,
-          yoyo: true,
-          repeat: -1,
-          duration: 2400 + rand() * 1600,
-          ease: "Sine.easeInOut",
-        });
+        this.tweens.add({ targets: s, y: s.y - 24, x: s.x + (rand() > 0.5 ? 30 : -30), yoyo: true, repeat: -1, duration: 2400 + rand() * 1600, ease: "Sine.easeInOut" });
       }
     }
 
-    // ---- Mission markers (still anchored to segment centers, but no scene swap)
+    // ---- Mission markers + themed clusters around each mission
     MISSIONS.forEach((mission, i) => {
-      const triggerX = (i + 1) * SEGMENT_WIDTH + SEGMENT_WIDTH / 2 - SEGMENT_WIDTH;
-      // ^ keep mission centers spaced evenly: at segment (i+1) center
       const x = (i + 1) * SEGMENT_WIDTH + SEGMENT_WIDTH / 2;
       const isDone = this.completed.has(mission.id);
+
+      // Themed cluster: scatter the mission's icon around its area
+      const theme = MISSION_THEME[mission.id];
+      if (theme) {
+        const clusterCount = 14;
+        for (let k = 0; k < clusterCount; k++) {
+          const tx = x + (rand() - 0.5) * (SEGMENT_WIDTH * 0.85);
+          const ty = GROUND_Y + theme.yOffset + (rand() - 0.5) * 30;
+          const sp = this.add.image(tx, ty, theme.key).setOrigin(0.5, 1);
+          sp.setScale(theme.scale * (0.7 + rand() * 0.6));
+          (sp.texture as Phaser.Textures.Texture).setFilter(Phaser.Textures.FilterMode.NEAREST);
+          if (theme.float) {
+            this.tweens.add({
+              targets: sp,
+              y: ty - 30,
+              x: tx + (rand() > 0.5 ? 24 : -24),
+              yoyo: true,
+              repeat: -1,
+              duration: 2200 + rand() * 1800,
+              ease: "Sine.easeInOut",
+            });
+          } else {
+            this.tweens.add({
+              targets: sp,
+              angle: rand() > 0.5 ? 3 : -3,
+              yoyo: true,
+              repeat: -1,
+              duration: 2000 + rand() * 1400,
+              ease: "Sine.easeInOut",
+            });
+          }
+        }
+      }
 
       const container = this.add.container(x, GROUND_Y - 80);
       const halo = this.add.circle(0, 0, 60, isDone ? 0xa0e0c0 : 0xffd1e8, 0.4);
@@ -193,7 +207,6 @@ export class WorldScene extends Phaser.Scene {
       });
 
       this.zoneTriggers.push({ id: mission.id, x, activated: false, label: container });
-      void triggerX;
     });
 
     // ---- Mascot
@@ -286,7 +299,6 @@ export class WorldScene extends Phaser.Scene {
     const idx = Math.floor(this.mascot.x / SEGMENT_WIDTH);
     if (idx !== this.lastSegmentIdx) {
       this.lastSegmentIdx = idx;
-      // Single environment name — never changes, to avoid env-switch stress
       this.events_.onPositionChange(this.mascot.x / WORLD_WIDTH, "Quiet Meadow");
     }
   }
