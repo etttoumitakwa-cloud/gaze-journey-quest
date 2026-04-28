@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { PhaserWorld } from "./PhaserWorld";
 import { Calibration } from "./Calibration";
 import { GazeOverlay } from "./GazeOverlay";
+import { ShadowFogOverlay } from "./ShadowFogOverlay";
+import { StoryIntro } from "./StoryIntro";
 import { CrystalClearMission } from "./missions/CrystalClearMission";
 import { RiverRunMission } from "./missions/RiverRunMission";
 import { EchoTrailMission } from "./missions/EchoTrailMission";
@@ -15,11 +17,23 @@ import { MISSIONS } from "./missions";
 import { Button } from "@/components/ui/button";
 import { gaze } from "./gaze";
 
+const STORY_KEY = "gazeworld:storyseen";
+
+/** Map mission progress (0..6) to a kingdom name. */
+function kingdomFor(progressX: number): string {
+  if (progressX < 0.34) return "Bubble Meadow";
+  if (progressX < 0.67) return "Crystal Forest";
+  return "Star Citadel";
+}
+
 export function GameContainer() {
   const [needsCalibration, setNeedsCalibration] = useState(true);
+  const [showStory, setShowStory] = useState(
+    () => typeof window !== "undefined" && !localStorage.getItem(STORY_KEY),
+  );
   const [activeMission, setActiveMission] = useState<MissionId | null>(null);
   const [completed, setCompleted] = useState<MissionId[]>([]);
-  const [zone, setZone] = useState("Quiet Glade");
+  const [zone, setZone] = useState("Bubble Meadow");
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -30,6 +44,7 @@ export function GameContainer() {
       gaze.stop();
     };
   }, []);
+
 
   const handleMissionEnter = (id: MissionId) => {
     if (completed.includes(id)) return;
