@@ -88,10 +88,11 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create() {
-    // ---- Sky gradient (single solid pastel) covers whole world: no seams ever
-    this.cameras.main.setBackgroundColor("#f7d9ec");
+    // ---- Sky: very soft, low-chroma gradient (ASD-friendly: low arousal)
+    this.cameras.main.setBackgroundColor("#e8eef2");
     const sky = this.add.graphics();
-    sky.fillGradientStyle(0xfbe3f0, 0xfbe3f0, 0xe9d4f5, 0xe9d4f5, 1);
+    // pale sky → pale sage horizon, no saturated pinks
+    sky.fillGradientStyle(0xe8eef2, 0xe8eef2, 0xdfe8e2, 0xdfe8e2, 1);
     sky.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
     // ---- Continuous tiled hills/grass via TileSprite (perfectly seamless because it wraps a single texture)
@@ -102,6 +103,7 @@ export class WorldScene extends Phaser.Scene {
     const srcImg = bgTex.getSourceImage() as HTMLImageElement;
     const scaleY = WORLD_HEIGHT / srcImg.height;
     tile.setTileScale(scaleY, scaleY);
+    tile.setAlpha(0.85); // soften saturation
 
     // ---- Ground band to hide any horizon mismatch and unify the floor color
     const ground = this.add.graphics();
