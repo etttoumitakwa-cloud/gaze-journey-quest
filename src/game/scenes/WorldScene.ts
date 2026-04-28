@@ -317,7 +317,7 @@ export class WorldScene extends Phaser.Scene {
       ease: "Back.easeOut",
     });
     for (let i = 0; i < 12; i++) {
-      const s = this.add.circle(t.x, GROUND_Y - 80, 4, 0xfff1a8, 0.9);
+      const s = this.add.circle(t.x, GROUND_Y - 80, 4, 0xeae3c8, 0.9);
       const angle = (i / 12) * Math.PI * 2;
       this.tweens.add({
         targets: s,
