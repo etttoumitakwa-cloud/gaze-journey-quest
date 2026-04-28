@@ -83,14 +83,20 @@ export function GameContainer() {
   }
 
   const allDone = completed.length >= MISSIONS.length;
+  // Fog density eases as the child completes missions (lifts the fog)
+  const fogDensity = Math.max(0.18, 0.55 - completed.length * 0.06);
+  const showOverlays = !activeMission && !showStory;
 
   return (
     <div className="min-h-screen bg-soft-gradient p-4 md:p-6">
       <header className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-4">
         <div>
-          <h1 className="font-pixel text-base md:text-lg text-foreground">🌸 ASD Explorer</h1>
+          <h1 className="font-pixel text-base md:text-lg text-foreground">🌫️ GazeWorld</h1>
           <p className="text-xs text-muted-foreground">
-            Now in: <span className="font-medium text-foreground">{zone}</span>
+            Kingdom: <span className="font-medium text-foreground">{kingdomFor(progress)}</span>
+            {zone && zone !== kingdomFor(progress) && (
+              <> · <span className="text-foreground">{zone}</span></>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -133,9 +139,9 @@ export function GameContainer() {
         {allDone && (
           <div className="mt-6 rounded-2xl bg-card p-6 text-center shadow-glow">
             <div className="text-4xl">🌟</div>
-            <h2 className="mt-2 font-pixel text-lg">All missions complete!</h2>
+            <h2 className="mt-2 font-pixel text-lg">The fog has lifted!</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              View your gaze patterns on the dashboard.
+              GazeWorld is bright again. View your gaze patterns on the dashboard.
             </p>
             <Link to="/dashboard">
               <Button className="mt-4">Open dashboard</Button>
@@ -144,8 +150,18 @@ export function GameContainer() {
         )}
       </main>
 
-      <GazeOverlay active={!activeMission} />
+      <ShadowFogOverlay active={showOverlays} density={fogDensity} />
+      <GazeOverlay active={showOverlays} />
       {renderMission()}
+      {showStory && (
+        <StoryIntro
+          onBegin={() => {
+            localStorage.setItem(STORY_KEY, "1");
+            setShowStory(false);
+          }}
+        />
+      )}
     </div>
   );
 }
+
