@@ -193,7 +193,7 @@ export class WorldScene extends Phaser.Scene {
       container.add([halo, ring, text, label]);
       if (isDone) {
         const check = this.add
-          .text(38, -40, "✓", { fontSize: "24px", color: "#6fc9a0", fontStyle: "bold" })
+          .text(38, -40, "✓", { fontSize: "24px", color: "#5a8a76", fontStyle: "bold" })
           .setOrigin(0.5);
         container.add(check);
       }
