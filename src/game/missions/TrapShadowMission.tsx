@@ -224,21 +224,10 @@ export function TrapShadowMission({ onComplete, onCancel }: Props) {
                         "polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%)",
                       background: isBlocked
                         ? "color-mix(in oklab, var(--primary) 60%, transparent)"
-                        : isShadow
-                          ? "color-mix(in oklab, var(--accent) 35%, transparent)"
-                          : "color-mix(in oklab, var(--muted) 70%, transparent)",
+                        : "color-mix(in oklab, var(--muted) 70%, transparent)",
                       cursor: isBlocked || isShadow ? "default" : "pointer",
                     }}
                   >
-                    {isShadow && (
-                      <img
-                        src={shadowImg}
-                        alt=""
-                        width={48}
-                        height={48}
-                        className="pixel-perfect animate-float"
-                      />
-                    )}
                     {isDwelling && (
                       <div
                         className="absolute inset-0 rounded-md ring-2 ring-primary"
@@ -253,6 +242,27 @@ export function TrapShadowMission({ onComplete, onCancel }: Props) {
                 );
               }),
             )}
+
+            {/* Shadow sprite — tweens between cells via CSS transition */}
+            <div
+              className="pointer-events-none absolute flex items-center justify-center"
+              style={{
+                width: TILE,
+                height: TILE,
+                left: 16,
+                top: 16,
+                transform: `translate(${shadow.c * TILE + colOffset(shadow.r)}px, ${shadow.r * ROW_H}px)`,
+                transition: "transform 280ms cubic-bezier(0.34, 1.3, 0.64, 1)",
+              }}
+            >
+              <img
+                src={shadowImg}
+                alt=""
+                width={48}
+                height={48}
+                className="pixel-perfect animate-float"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
