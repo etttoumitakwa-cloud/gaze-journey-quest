@@ -1,7 +1,10 @@
 import * as Phaser from "phaser";
 import { MISSIONS } from "../missions";
 import mascotUrl from "@/assets/mascot.png";
-import worldBg from "@/assets/world-meadow-tile.jpg";
+import pxSky from "@/assets/px-sky.png";
+import pxHillsFar from "@/assets/px-hills-far.png";
+import pxHillsMid from "@/assets/px-hills-mid.png";
+import pxGround from "@/assets/px-ground.png";
 import propFlower from "@/assets/prop-flower.png";
 import propTree from "@/assets/prop-tree.png";
 import propBall from "@/assets/prop-ball.png";
