@@ -60,6 +60,7 @@ export class WorldScene extends Phaser.Scene {
   private zoneTriggers: { id: string; x: number; activated: boolean; label: Phaser.GameObjects.Container }[] = [];
   private bobTime = 0;
   private lastSegmentIdx = -1;
+  private isHopping = false;
 
   constructor() {
     super("world");
@@ -310,10 +311,26 @@ export class WorldScene extends Phaser.Scene {
         WORLD_WIDTH - 100,
       );
       this.mascot.setFlipX(vx < 0);
+      // Springy hop while walking (catch-the-cat style: tween up + bounce down)
+      if (!this.isHopping) {
+        this.isHopping = true;
+        this.tweens.add({
+          targets: this.mascot,
+          y: GROUND_Y - 22,
+          duration: 180,
+          ease: "Quad.easeOut",
+          yoyo: true,
+          onComplete: () => {
+            this.mascot.y = GROUND_Y;
+            this.isHopping = false;
+          },
+        });
+      }
+    } else if (!this.isHopping) {
+      // Idle: gentle breathing only
+      this.bobTime += delta;
+      this.mascot.y = GROUND_Y + Math.sin(this.bobTime / 350) * 3;
     }
-
-    this.bobTime += delta;
-    this.mascot.y = GROUND_Y + Math.sin(this.bobTime / 250) * 6;
 
     for (const t of this.zoneTriggers) {
       if (Math.abs(this.mascot.x - t.x) < 60 && !t.activated) {
