@@ -26,13 +26,13 @@ export function PhaserWorld({ completed, onMissionEnter, onPositionChange }: Pro
       parent: containerRef.current,
       width: containerRef.current.clientWidth,
       height: 640,
-      backgroundColor: "#e8eef2",
+      backgroundColor: "#bfe9d8",
       physics: { default: "arcade", arcade: { gravity: { x: 0, y: 0 } } },
       scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
       },
-      pixelArt: false,
+      pixelArt: true,
       banner: false,
     });
 
