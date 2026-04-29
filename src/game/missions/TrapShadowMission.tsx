@@ -33,40 +33,28 @@ function neighbors({ r, c }: Cell): Cell[] {
 const isEdge = (cell: Cell) =>
   cell.r === 0 || cell.r === ROWS - 1 || cell.c === 0 || cell.c === COLS - 1;
 
-/** BFS: shortest distance from `start` to ANY edge that doesn't pass through `blocked`. */
+/** BFS: shortest distance from `start` to ANY edge, with the first step taken. */
 function distanceToEdge(start: Cell, blocked: Set<string>): { dist: number; next: Cell | null } {
   if (blocked.has(key(start.r, start.c))) return { dist: Infinity, next: null };
   if (isEdge(start)) return { dist: 0, next: null };
+  // Each queue entry carries the first-step neighbor it descended from.
   const seen = new Set<string>([key(start.r, start.c)]);
-  const parent = new Map<string, Cell>();
-  const q: Cell[] = [start];
+  const q: { cell: Cell; depth: number; first: Cell }[] = [];
+  for (const n of neighbors(start)) {
+    const k = key(n.r, n.c);
+    if (blocked.has(k)) continue;
+    seen.add(k);
+    if (isEdge(n)) return { dist: 1, next: n };
+    q.push({ cell: n, depth: 1, first: n });
+  }
   while (q.length) {
-    const cur = q.shift()!;
-    for (const n of neighbors(cur)) {
+    const { cell, depth, first } = q.shift()!;
+    for (const n of neighbors(cell)) {
       const k = key(n.r, n.c);
       if (seen.has(k) || blocked.has(k)) continue;
       seen.add(k);
-      parent.set(k, cur);
-      if (isEdge(n)) {
-        // walk back to find the first step from start
-        let step: Cell = n;
-        while (true) {
-          const p = parent.get(key(step.r, step.c));
-          if (!p || (p.r === start.r && p.c === start.c)) break;
-          step = p;
-        }
-        // distance = depth — recompute via simple count
-        let depth = 0;
-        let cursor: Cell = n;
-        while (true) {
-          const p = parent.get(key(cursor.r, cursor.c));
-          if (!p) break;
-          cursor = p;
-          depth++;
-        }
-        return { dist: depth, next: step };
-      }
-      q.push(n);
+      if (isEdge(n)) return { dist: depth + 1, next: first };
+      q.push({ cell: n, depth: depth + 1, first });
     }
   }
   return { dist: Infinity, next: null };
