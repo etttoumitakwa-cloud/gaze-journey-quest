@@ -72,7 +72,10 @@ export class WorldScene extends Phaser.Scene {
 
   preload() {
     this.load.image("mascot", mascotUrl);
-    this.load.image("world-bg", worldBg);
+    this.load.image("px-sky", pxSky);
+    this.load.image("px-hills-far", pxHillsFar);
+    this.load.image("px-hills-mid", pxHillsMid);
+    this.load.image("px-ground", pxGround);
     this.load.image("p-flower", propFlower);
     this.load.image("p-tree", propTree);
     this.load.image("p-ball", propBall);
@@ -91,30 +94,50 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create() {
-    // ---- Sky: very soft, low-chroma gradient (ASD-friendly: low arousal)
-    this.cameras.main.setBackgroundColor("#e8eef2");
-    const sky = this.add.graphics();
-    // pale sky → pale sage horizon, no saturated pinks
-    sky.fillGradientStyle(0xe8eef2, 0xe8eef2, 0xdfe8e2, 0xdfe8e2, 1);
-    sky.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    // Force crisp pixel scaling on every texture we load
+    const NEAREST = Phaser.Textures.FilterMode.NEAREST;
+    ["px-sky", "px-hills-far", "px-hills-mid", "px-ground"].forEach((k) =>
+      this.textures.get(k).setFilter(NEAREST),
+    );
 
-    // ---- Continuous tiled hills/grass via TileSprite (perfectly seamless because it wraps a single texture)
-    const bgTex = this.textures.get("world-bg");
-    bgTex.setFilter(Phaser.Textures.FilterMode.NEAREST);
-    const tile = this.add.tileSprite(0, 0, WORLD_WIDTH, WORLD_HEIGHT, "world-bg").setOrigin(0, 0);
-    // scale the texture so it fills vertically while still tiling horizontally
-    const srcImg = bgTex.getSourceImage() as HTMLImageElement;
-    const scaleY = WORLD_HEIGHT / srcImg.height;
-    tile.setTileScale(scaleY, scaleY);
-    tile.setAlpha(0.85); // soften saturation
+    // ---- Parallax sky (locked to camera)
+    const skyTex = this.textures.get("px-sky").getSourceImage() as HTMLImageElement;
+    const sky = this.add
+      .tileSprite(0, 0, this.cameras.main.width, WORLD_HEIGHT, "px-sky")
+      .setOrigin(0, 0)
+      .setScrollFactor(0);
+    sky.setTileScale(WORLD_HEIGHT / skyTex.height, WORLD_HEIGHT / skyTex.height);
 
-    // ---- Ground band: soft sage to unify the floor color
-    const ground = this.add.graphics();
-    ground.fillStyle(0xb6c9b0, 1);
-    ground.fillRect(0, GROUND_Y + 10, WORLD_WIDTH, WORLD_HEIGHT - GROUND_Y);
-    const groundShade = this.add.graphics();
-    groundShade.fillStyle(0x000000, 0.04);
-    groundShade.fillRect(0, GROUND_Y + 10, WORLD_WIDTH, 6);
+    // ---- Parallax far hills (slow scroll)
+    const farTex = this.textures.get("px-hills-far").getSourceImage() as HTMLImageElement;
+    const farH = 280;
+    const farScale = farH / farTex.height;
+    const far = this.add
+      .tileSprite(0, GROUND_Y - farH + 60, this.cameras.main.width, farH, "px-hills-far")
+      .setOrigin(0, 0)
+      .setScrollFactor(0.25);
+    far.setTileScale(farScale, farScale);
+    far.setAlpha(0.85);
+
+    // ---- Parallax mid hills (medium scroll)
+    const midTex = this.textures.get("px-hills-mid").getSourceImage() as HTMLImageElement;
+    const midH = 320;
+    const midScale = midH / midTex.height;
+    const mid = this.add
+      .tileSprite(0, GROUND_Y - midH + 110, this.cameras.main.width, midH, "px-hills-mid")
+      .setOrigin(0, 0)
+      .setScrollFactor(0.55);
+    mid.setTileScale(midScale, midScale);
+
+    // ---- Ground (1:1 scroll, full world width)
+    const groundTex = this.textures.get("px-ground").getSourceImage() as HTMLImageElement;
+    const groundH = WORLD_HEIGHT - GROUND_Y + 30;
+    const groundScale = groundH / groundTex.height;
+    const ground = this.add
+      .tileSprite(0, GROUND_Y - 30, WORLD_WIDTH, groundH, "px-ground")
+      .setOrigin(0, 0);
+    ground.setTileScale(groundScale, groundScale);
+
 
     // ---- Gentle ambient props sprinkled the whole way (deterministic)
     const rand = seeded(20260428);
