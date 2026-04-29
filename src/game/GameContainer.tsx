@@ -11,6 +11,7 @@ import { EchoTrailMission } from "./missions/EchoTrailMission";
 import { TalkTimeMission } from "./missions/TalkTimeMission";
 import { SocialRadarMission } from "./missions/SocialRadarMission";
 import { MazeRunnerMission } from "./missions/MazeRunnerMission";
+import { TrapShadowMission } from "./missions/TrapShadowMission";
 import type { MissionId, MissionResult } from "./types";
 import { loadSave, saveResult } from "./storage";
 import { MISSIONS } from "./missions";
@@ -32,6 +33,7 @@ export function GameContainer() {
     () => typeof window !== "undefined" && !localStorage.getItem(STORY_KEY),
   );
   const [activeMission, setActiveMission] = useState<MissionId | null>(null);
+  const [bonusOpen, setBonusOpen] = useState(false);
   const [completed, setCompleted] = useState<MissionId[]>([]);
   const [zone, setZone] = useState("Bubble Meadow");
   const [progress, setProgress] = useState(0);
@@ -85,7 +87,7 @@ export function GameContainer() {
   const allDone = completed.length >= MISSIONS.length;
   // Fog density eases as the child completes missions (lifts the fog)
   const fogDensity = Math.max(0.18, 0.55 - completed.length * 0.06);
-  const showOverlays = !activeMission && !showStory;
+  const showOverlays = !activeMission && !showStory && !bonusOpen;
 
   return (
     <div className="min-h-screen bg-soft-gradient p-4 md:p-6">
@@ -153,6 +155,22 @@ export function GameContainer() {
       <ShadowFogOverlay active={showOverlays} density={fogDensity} />
       <GazeOverlay active={showOverlays} />
       {renderMission()}
+      {bonusOpen && (
+        <TrapShadowMission
+          onComplete={() => setBonusOpen(false)}
+          onCancel={() => setBonusOpen(false)}
+        />
+      )}
+      {!activeMission && !showStory && !bonusOpen && (
+        <button
+          onClick={() => setBonusOpen(true)}
+          className="fixed bottom-5 right-5 z-30 flex items-center gap-2 rounded-full bg-card px-4 py-3 text-sm shadow-glow ring-1 ring-border hover:scale-105 transition"
+          title="Bonus: Trap the Shadow"
+        >
+          <span className="text-lg">👻</span>
+          <span className="font-pixel text-xs">Trap the Shadow</span>
+        </button>
+      )}
       {showStory && (
         <StoryIntro
           onBegin={() => {
